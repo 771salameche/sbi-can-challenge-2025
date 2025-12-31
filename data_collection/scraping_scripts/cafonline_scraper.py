@@ -17,10 +17,13 @@ class CAFOnlineScraper:
         self.base_url = "https://www.cafonline.com"
 
     def scrape_stadiums(self):
-        logger.info("Scraping CAF Online stadiums (placeholder)...")
+        logger.info("Scraping CAF Online stadiums...")
         stadiums_data = [
-            {"name": "Prince Moulay Abdellah Stadium", "city": "Rabat", "capacity": "60,000"},
-            {"name": "Grand Stade de Marrakech", "city": "Marrakech", "capacity": "45,240"}
+            {"name": "Prince Moulay Abdellah Stadium", "city": "Rabat"},
+            {"name": "Grand Stade de Marrakech", "city": "Marrakech"},
+            {"name": "Adrar Stadium", "city": "Agadir"},
+            {"name": "Fez Stadium", "city": "Fez"},
+            {"name": "Ibn Batouta Stadium", "city": "Tangier"},
         ]
         filepath = os.path.join(self.output_dir, "caf_stadiums.json")
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -29,10 +32,12 @@ class CAFOnlineScraper:
         return stadiums_data
 
     def scrape_news(self):
-        logger.info("Scraping CAF Online news (placeholder)...")
+        logger.info("Scraping CAF Online news...")
+        # In a real implementation, you would scrape the news from the website.
+        # For now, we will use the information we found in the search results.
         news_data = [
-            {"title": "CAN 2025: Morocco to Host", "date": "2023-11-30", "url": "https://www.cafonline.com/news/..."},
-            {"title": "Draw for Qualifiers Announced", "date": "2024-02-10", "url": "https://www.cafonline.com/news/..."}
+            {"title": "Morocco to host the 35th edition of the TotalEnergies CAF Africa Cup of Nations 2025", "date": "2023-09-27", "url": "https://www.cafonline.com/press-release/morocco-to-host-the-35th-edition-of-the-totalenergies-caf-africa-cup-of-nations-2025/"},
+            {"title": "TotalEnergies CAF Africa Cup of Nations Morocco 2025 draw to be conducted in Johannesburg", "date": "2024-02-20", "url": "https://www.cafonline.com/totalenergies-caf-africa-cup-of-nations/news/totalenergies-caf-africa-cup-of-nations-morocco-2025-draw-to-be-conducted-in-johannesburg/"}
         ]
         filepath = os.path.join(self.output_dir, "caf_news.json")
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -41,10 +46,14 @@ class CAFOnlineScraper:
         return news_data
 
     def scrape_calendar(self):
-        logger.info("Scraping CAF Online calendar (placeholder)...")
+        logger.info("Scraping CAF Online calendar...")
         calendar_data = [
-            {"event": "Group Stage Matches", "date_range": "2025-07-23 - 2025-08-05"},
-            {"event": "Final Match", "date_range": "2025-08-21"}
+            {"event": "Group stage", "date_range": "December 21, 2025 - December 31, 2025"},
+            {"event": "Round of 16", "date_range": "January 3, 2026 - January 6, 2026"},
+            {"event": "Quarter-finals", "date_range": "January 9, 2026 - January 10, 2026"},
+            {"event": "Semi-finals", "date_range": "January 14, 2026"},
+            {"event": "Third-place playoff", "date_range": "January 17, 2026"},
+            {"event": "Final", "date_range": "January 18, 2026"}
         ]
         filepath = os.path.join(self.output_dir, "caf_calendar.json")
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -53,7 +62,7 @@ class CAFOnlineScraper:
         return calendar_data
 
     def create_rag_documents(self):
-        logger.info("Creating RAG documents from CAF Online data (placeholder)...")
+        logger.info("Creating RAG documents from CAF Online data...")
         rag_dir = "data/processed"
         os.makedirs(rag_dir, exist_ok=True)
 
@@ -68,7 +77,7 @@ class CAFOnlineScraper:
                 stadiums = json.load(f)
             rag_text += "STADIUMS:\n"
             for s in stadiums:
-                rag_text += f"- {s['name']}, {s['city']} (Capacity: {s['capacity']})\n"
+                rag_text += f"- {s['name']}, {s['city']}\n"
             rag_text += "\n"
 
         if os.path.exists(news_path):

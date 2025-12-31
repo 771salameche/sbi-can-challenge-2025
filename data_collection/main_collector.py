@@ -1,6 +1,7 @@
 import os
 import logging
 from datetime import datetime
+import asyncio
 
 from scraping_scripts.scrape_wikipedia import WikipediaCAN
 from scraping_scripts.scrape_transfermarkt import TransfermarktCAN
@@ -15,7 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def main():
+async def main():
     """Orchestrateur principal de collecte de donnees"""
     logger.info("="*70)
     logger.info("COLLECTE DE DONNEES CAN 2025 - SBI STUDENT CHALLENGE")
@@ -37,7 +38,6 @@ def main():
         wiki_scraper = WikipediaCAN()
         wiki_scraper.get_can_history()
         wiki_scraper.get_can_editions()
-        wiki_scraper.get_can_2025_info()
         wiki_scraper.create_rag_documents()
     except Exception as e:
         logger.error(f"Erreur lors de la collecte Wikipedia: {e}")
@@ -50,7 +50,6 @@ def main():
     try:
         tm_scraper = TransfermarktCAN()
         tm_scraper.get_african_teams()
-        tm_scraper.get_top_players()
         tm_scraper.create_rag_documents()
     except Exception as e:
         logger.error(f"Erreur lors de la collecte Transfermarkt: {e}")
@@ -62,8 +61,8 @@ def main():
     
     try:
         sofascore_scraper = SofaScoreCAN()
-        sofascore_scraper.get_can_tournament_info()
-        sofascore_scraper.get_upcoming_matches()
+        await sofascore_scraper.get_can_tournament_info()
+        await sofascore_scraper.get_upcoming_matches()
         sofascore_scraper.create_rag_documents()
     except Exception as e:
         logger.error(f"Erreur lors de la collecte SofaScore: {e}")
@@ -86,4 +85,4 @@ def main():
     logger.info("Fichiers crees dans data/raw/ et data/processed/")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

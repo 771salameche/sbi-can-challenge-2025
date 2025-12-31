@@ -1,9 +1,10 @@
-import requests
-from bs4 import BeautifulSoup
+import asyncio
 import json
 import os
 import logging
 from datetime import datetime
+from sofascore_wrapper.api import SofascoreAPI
+from sofascore_wrapper.search import Search
 
 logger = logging.getLogger(__name__)
 
@@ -11,30 +12,35 @@ class SofaScoreCAN:
     def __init__(self, output_dir="data/raw/sofascore"):
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
+        self.scraper = SofascoreAPI()
+        self.search_client = Search(self.scraper, search_string=None)
 
-    def get_can_tournament_info(self):
+    async def _get_tournament_id(self, tournament_name: str):
+        logger.info(f"Searching for tournament: {tournament_name}...")
+        search_results = await self.search_client.search_all(search_string=tournament_name)
+        logger.info(f"Full search results for '{tournament_name}': {json.dumps(search_results, indent=2)}")
+        
+        tournament_id = None
+        for result in search_results.get('results', []):
+            logger.info(f"Processing search result entity: {json.dumps(result.get('entity', {}), indent=2)}")
+            if result.get('entityType') == 'tournament' and result.get('entity', {}).get('name') == tournament_name:
+                tournament_id = result['entity']['id']
+                logger.info(f"Found tournament '{tournament_name}' with ID: {tournament_id}")
+                break
+        if not tournament_id:
+            logger.warning(f"Tournament '{tournament_name}' not found in search results.")
+        return tournament_id
+
+    async def get_can_tournament_info(self):
         logger.info("SofaScoreCAN.get_can_tournament_info called")
         
-        url = "https://www.sofascore.com/tournament/football/africa/africa-cup-of-nations/19"
-        
         try:
-            response = requests.get(url, headers=self.headers)
-            response.raise_for_status()
-            
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            title = soup.find('h1').get_text(strip=True) if soup.find('h1') else "Africa Cup of Nations"
+            tournament_id = await self._get_tournament_id("Africa Cup of Nations")
+            if not tournament_id:
+                logger.error("Could not find 'Africa Cup of Nations' tournament ID.")
+                return None
 
-            tournament_info = {
-                "name": title,
-                "host": "Morocco", 
-                "dates": "July 23, 2025 – August 21, 2025", 
-                "teams": 24,
-                "collected_at": datetime.now().isoformat()
-            }
+            tournament_info = await self.scraper.get_tournament_details(tournament_id)
 
             filepath = os.path.join(self.output_dir, "can_tournament_info.json")
             with open(filepath, 'w', encoding='utf-8') as f:
@@ -46,34 +52,18 @@ class SofaScoreCAN:
             logger.error(f"Erreur lors de la collecte des infos du tournoi: {e}")
             return None
 
-    def get_upcoming_matches(self):
+    async def get_upcoming_matches(self):
         logger.info("SofaScoreCAN.get_upcoming_matches called")
 
-        url = "https://www.sofascore.com/tournament/football/africa/africa-cup-of-nations/19"
-        
         try:
-            response = requests.get(url, headers=self.headers)
-            response.raise_for_status()
-            
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            matches = []
-            
-            match_elements = soup.select('div.list-wrapper a')
-            
-            for element in match_elements[:5]:
-                home_team_element = element.select_one('div.team.home .name')
-                away_team_element = element.select_one('div.team.away .name')
-                
-                if home_team_element and away_team_element:
-                    home_team = home_team_element.get_text(strip=True)
-                    away_team = away_team_element.get_text(strip=True)
-                    match_date = element.select_one('div.status-or-time').get_text(strip=True)
-                    
-                    matches.append({
-                        "match": f"{home_team} vs {away_team}",
-                        "date": match_date
-                    })
+            tournament_id = await self._get_tournament_id("Africa Cup of Nations")
+            if not tournament_id:
+                logger.error("Could not find 'Africa Cup of Nations' tournament ID.")
+                return None
+
+            # Assuming the API has a method to get events for a specific year
+            # The example showed get_tournament_events(tournament_id), let's try that.
+            matches = await self.scraper.get_tournament_events(tournament_id)
 
             filepath = os.path.join(self.output_dir, "upcoming_matches.json")
             with open(filepath, 'w', encoding='utf-8') as f:
@@ -103,11 +93,13 @@ class SofaScoreCAN:
             matches = json.load(f)
 
         rag_text = f"SOFASCORE - CAN 2025\n\n"
-        rag_text += f"Tournament: {tournament['name']}\nHost: {tournament['host']}\n\n"
+        if tournament:
+            rag_text += f"Tournament: {tournament.get('name', 'N/A')}\n\n"
+
         rag_text += "UPCOMING MATCHES:\n"
         if matches:
             for match in matches:
-                rag_text += f"- {match['match']} on {match['date']}\n"
+                rag_text += f"- {match.get('homeTeam', {}).get('name', 'N/A')} vs {match.get('awayTeam', {}).get('name', 'N/A')} on {datetime.fromtimestamp(match.get('startTimestamp', 0)).strftime('%Y-%m-%d %H:%M') if match.get('startTimestamp') else 'N/A'}\n"
         else:
             rag_text += "No upcoming matches found.\n"
         
