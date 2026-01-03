@@ -6,3 +6,7 @@ __pycache__\
 # data_collection
 data/
 logs/
+
+# RAG Bot Specific
+.env
+vector_store/
