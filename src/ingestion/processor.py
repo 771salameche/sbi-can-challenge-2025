@@ -138,14 +138,12 @@ def extract_can_details_from_le360_json_string(json_string: str) -> str:
     
     rag_document_content = []
     rag_document_content.append("Détails complets de la Coupe d'Afrique des Nations 2025 (CAN 2025)\n\n")
-    rag_document_content.append("--- Informations Générales ---
-")
+    rag_document_content.append("--- Informations Générales ---")
     for info in general_info:
         rag_document_content.append(f"{info}\n")
     rag_document_content.append("\n")
 
-    rag_document_content.append("--- Composition des Groupes ---
-")
+    rag_document_content.append("--- Composition des Groupes ---")
     if groups:
         for group, team_list in sorted(groups.items()):
             rag_document_content.append(f"  Groupe {group}: {', '.join(team_list)}\n")
@@ -153,8 +151,7 @@ def extract_can_details_from_le360_json_string(json_string: str) -> str:
         rag_document_content.append("  Aucune information de groupe détaillée trouvée.\n")
     rag_document_content.append("\n")
 
-    rag_document_content.append("--- Calendrier des Matchs ---
-")
+    rag_document_content.append("--- Calendrier des Matchs ---")
     if matches_schedule:
         for match_info in matches_schedule:
             rag_document_content.append(f"- {match_info}\n")
@@ -162,8 +159,7 @@ def extract_can_details_from_le360_json_string(json_string: str) -> str:
         rag_document_content.append("  Aucun calendrier de match détaillé trouvé.\n")
     rag_document_content.append("\n")
 
-    rag_document_content.append("--- Stades Hôtes ---
-")
+    rag_document_content.append("--- Stades Hôtes ---")
     if stadiums:
         for stadium in sorted(list(stadiums)):
             rag_document_content.append(f"- {stadium}\n")

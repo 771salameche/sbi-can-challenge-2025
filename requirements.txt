@@ -2,7 +2,6 @@
 langchain
 langchain-core
 langchain-community
-langchain-text-splitter
 langchain-chroma
 
 # --- LLM & Embedding Model Integrations ---

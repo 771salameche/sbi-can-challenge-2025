@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 import shutil
 from langchain_community.document_loaders import DirectoryLoader, UnstructuredFileLoader
-from langchain_text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain_chroma import Chroma
 from src import config # Import config from src

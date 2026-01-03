@@ -31,9 +31,10 @@ def get_google_gemini_llm_model():
     logger.info("Initializing Google Gemini LLM model for application...")
     try:
         llm = ChatGoogleGenerativeAI(
-            model=os.getenv("GOOGLE_GEMINI_MODEL", config.LLM_MODEL_NAME),
+            model=os.getenv("GOOGLE_GEMINI_MODEL", "models/gemini-2.0-flash"),
             google_api_key=config.GOOGLE_API_KEY,
             temperature=0.7,
+            max_retries=3, # Add this line to enable automatic retries on rate limit errors
         )
         return llm
     except Exception as e:
