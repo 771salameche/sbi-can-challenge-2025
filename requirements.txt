@@ -2,11 +2,13 @@
 langchain
 langchain-core
 langchain-community
+langchain_text_splitters
 langchain-chroma
 
 # --- LLM & Embedding Model Integrations ---
-langchain-google-genai
-langchain-openai
+langchain-huggingface # New: For Hugging Face Endpoint integration
+huggingface-hub      # New: The official Hugging Face client library
+langchain-openai     # For Azure Embeddings
 azure-identity
 
 # --- Web Application ---
@@ -16,8 +18,7 @@ streamlit
 requests
 beautifulsoup4
 pandas
-unstructured[local-inference] # Provides loaders for various file types like .txt, .pdf, etc.
-wikipedia
+unstructured[local-inference]
 
 # --- Configuration ---
 python-dotenv

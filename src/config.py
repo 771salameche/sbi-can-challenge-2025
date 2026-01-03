@@ -13,7 +13,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 
 # --- API Keys & Endpoints ---
 # Fetches all required API keys and settings from environment variables.
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2023-05-15")
@@ -33,7 +33,6 @@ CHROMA_DB_PATH = DATA_PATH / "chroma_db" # Changed from previous to match new ar
 # --- LLM & Embedding Model Parameters ---
 # Centralizes model names and parameters for easy swapping and tuning.
 EMBEDDING_MODEL_NAME = "text-embedding-ada-002" # Or your specific Azure deployment name
-LLM_MODEL_NAME = "gemini-1.5-flash"
 
 # --- Text Splitting Parameters ---
 # Defines the parameters for document chunking.
@@ -43,7 +42,7 @@ CHUNK_OVERLAP = 200
 def check_environment_variables():
     """Checks if all required environment variables are set."""
     required_vars = [
-        "GOOGLE_API_KEY",
+        "HUGGINGFACEHUB_API_TOKEN",
         "AZURE_OPENAI_API_KEY",
         "AZURE_OPENAI_ENDPOINT",
         "AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME"

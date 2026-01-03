@@ -6,23 +6,21 @@ from src.app.chain import get_chain_manager
 
 logger = logging.getLogger(__name__)
 
-# --- Mode & Temperature Selection Logic ---
-def get_query_mode_and_temp(query: str) -> (str, float):
+# --- Mode Selection Logic ---
+def get_query_mode(query: str) -> str:
     """
-    Analyzes the user query to determine the appropriate mode and temperature.
-    - Low temperature for factual/statistical queries.
-    - High temperature for creative/summary queries.
+    Analyzes the user query to determine the appropriate prompt mode.
     """
     query = query.lower()
     if any(keyword in query for keyword in ["résume", "résumer", "synthétise", "synthétiser"]):
         logger.info("Query identified as 'summary' mode.")
-        return "summary", 0.5  # Higher temp for summarization
+        return "summary"
     elif any(keyword in query for keyword in ["combien", "quel est le score", "statistique", "donnée"]):
         logger.info("Query identified as 'stats' mode.")
-        return "stats", 0.1  # Lower temp for precise data
+        return "stats"
     else:
         logger.info("Query identified as 'default' mode.")
-        return "default", 0.3 # Default low temperature for factual Q&A
+        return "default"
 
 # --- Streamlit UI Components ---
 def display_message(role, content):
@@ -34,7 +32,7 @@ def display_message(role, content):
 
 def main_streamlit_app():
     """Main function for the Streamlit RAG application, using the new Prompt Management Architecture."""
-    st.set_page_config(page_title="CAN Assistant Pro (New Arch)", page_icon="⚽", layout="wide")
+    st.set_page_config(page_title="CAN Assistant Pro (Local LLM)", page_icon="⚽", layout="wide")
 
     # Apply custom CSS
     st.markdown("""
@@ -53,7 +51,7 @@ def main_streamlit_app():
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="stHeader"><h1 class="stTitle">CAN Assistant Pro ⚽</h1></div>', unsafe_allow_html=True)
+    st.markdown('<div class="stHeader"><h1 class="stTitle">CAN Assistant Pro ⚽ (Local LLM)</h1></div>', unsafe_allow_html=True)
     st.markdown("### Votre expert IA pour la Coupe d'Afrique des Nations 2025")
 
     # --- RAG Pipeline Initialization ---
@@ -81,21 +79,22 @@ def main_streamlit_app():
         st.session_state.messages_display.append({"role": "user", "content": user_query})
         display_message("user", user_query)
 
-        # Get mode and temperature based on query
-        mode, temperature = get_query_mode_and_temp(user_query)
+        # Get mode based on query
+        mode = get_query_mode(user_query)
         st.session_state.chat_history.append(HumanMessage(content=user_query))
 
         with st.spinner(f"L'assistant réfléchit (Mode: {mode})..."):
             try:
                 # Get the appropriate chain from the manager
-                rag_chain = chain_manager.get_rag_chain(mode=mode, temperature=temperature)
+                rag_chain = chain_manager.get_rag_chain(mode=mode)
                 
                 # Invoke the RAG chain
                 response = rag_chain.invoke({
                     "chat_history": st.session_state.chat_history,
                     "input": user_query
                 })
-                ai_response_content = response["answer"]
+                # The response from a pure LCEL chain with StrOutputParser is just a string
+                ai_response_content = response
                 st.session_state.messages_display.append({"role": "assistant", "content": ai_response_content})
                 st.session_state.chat_history.append(AIMessage(content=ai_response_content))
                 display_message("assistant", ai_response_content)

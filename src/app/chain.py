@@ -24,16 +24,15 @@ class RAGChainManager:
             st.error("La base de connaissances vectorielle n'a pas pu être chargée. L'application ne peut pas démarrer.")
             st.stop()
 
-    def get_rag_chain(self, mode: str = "default", temperature: float = 0.7):
+    def get_rag_chain(self, mode: str = "default"):
         """
         Main method to construct and return the complete, end-to-end RAG chain using LCEL.
-        It dynamically selects the prompt and LLM temperature.
+        It dynamically selects the prompt.
         """
-        logger.info(f"Constructing LCEL RAG chain with mode='{mode}' and temperature={temperature}")
+        logger.info(f"Constructing LCEL RAG chain with mode='{mode}'")
 
         try:
-            llm = llm_services.get_google_gemini_llm_model()
-            logger.info(f"LLM temperature intended to be set to: {temperature}")
+            llm = llm_services.get_huggingface_chat_llm()
         except Exception as e:
             logger.error(f"Failed to initialize LLM: {e}")
             st.error(f"Erreur d'initialisation du modèle de langue (LLM): {e}")

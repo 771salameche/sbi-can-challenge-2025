@@ -1,12 +1,12 @@
-import os
 import logging
-import streamlit as st # Keep st.cache_resource for Streamlit apps
+import streamlit as st
+from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langchain_openai import AzureOpenAIEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
 from src import config
 
 logger = logging.getLogger(__name__)
 
+# This function for Azure embeddings remains unchanged.
 @st.cache_resource
 def get_azure_openai_embeddings_model():
     """Initializes and returns the Azure OpenAI Embeddings model."""
@@ -22,23 +22,39 @@ def get_azure_openai_embeddings_model():
     except Exception as e:
         logger.error(f"Error initializing Azure OpenAI Embeddings: {e}. Please check AZURE_OPENAI_ environment variables.", exc_info=True)
         st.error(f"Error initializing Azure OpenAI Embeddings: {e}. Please check AZURE_OPENAI_ environment variables.")
-        st.stop() # Stop Streamlit app
+        st.stop()
         return None
 
+# Renamed the function to be more accurate
 @st.cache_resource
-def get_google_gemini_llm_model():
-    """Initializes and returns the Google Gemini LLM model."""
-    logger.info("Initializing Google Gemini LLM model for application...")
+def get_huggingface_chat_llm():
+    """
+    Initializes a LangChain Chat LLM object that calls a conversational model 
+    on the Hugging Face Inference API.
+    """
+    logger.info("Initializing Hugging Face Chat endpoint (Mistral-7B-Instruct-v0.2)...")
+    
+    repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
+    
     try:
-        llm = ChatGoogleGenerativeAI(
-            model=os.getenv("GOOGLE_GEMINI_MODEL", "models/gemini-2.0-flash"),
-            google_api_key=config.GOOGLE_API_KEY,
-            temperature=0.7,
-            max_retries=3, # Add this line to enable automatic retries on rate limit errors
+        # 1. Create the object that connects to the remote API endpoint
+        llm_endpoint = HuggingFaceEndpoint(
+            repo_id=repo_id,
+            huggingfacehub_api_token=config.HUGGINGFACEHUB_API_TOKEN,
+            temperature=0.2,
+            max_new_tokens=512,
         )
-        return llm
+        
+        # 2. Wrap the endpoint in the ChatHuggingFace class to make it
+        #    conform to the standard chat model interface for LCEL.
+        chat_model = ChatHuggingFace(llm=llm_endpoint)
+        
+        logger.info("Hugging Face Chat endpoint loaded successfully.")
+        return chat_model
+        
     except Exception as e:
-        logger.error(f"Error initializing Google Gemini LLM: {e}. Please check GOOGLE_API_KEY.", exc_info=True)
-        st.error(f"Error initializing Google Gemini LLM: {e}. Please check GOOGLE_API_KEY.")
-        st.stop() # Stop Streamlit app
+        error_message = f"Failed to initialize Hugging Face Chat API for model '{repo_id}'. Ensure your HUGGINGFACEHUB_API_TOKEN is correct. Error: {e}"
+        logger.error(error_message, exc_info=True)
+        st.error(error_message)
+        st.stop()
         return None
